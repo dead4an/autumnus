@@ -15,7 +15,6 @@ class Tensor:
         self.requires_grad = requires_grad
         self.shape = self.data.shape
         self.grad = None
-        self.parents = None
 
         if self.requires_grad:
             self.grad = np.zeros_like(self.data)
@@ -283,7 +282,6 @@ class Div(Operation):
         # Compute gradient for "a"
         if a.requires_gradient:
             # d/da(a / b) = b / b^2
-            # (a / b)' = (a'b - ab') / b^2
             da = dz * (1 / b.data)
             a.backward(da)
 
