@@ -58,6 +58,18 @@ class Tensor:
         result = operation.forward(self, other)
         
         return result
+
+    def __neg__(self) -> "Tensor":
+        operation = Neg()
+        result = operation.forward(self)
+
+        return result
+
+    def __sub__(self, other) -> "Tensor":
+        # addition and negation are defined above
+        result = self + (-other)
+        
+        return result 
     
     def __mul__(self, other) -> "Tensor":
         operation = Mul()
@@ -72,11 +84,28 @@ class Tensor:
         return result
     
     def __imul__(self, other) -> "Tensor":
-        operation = Mul()
+        operation = MatMul()
         result = operation.forward(self, other)
 
         return result
 
+    def __matmul__(self, other) -> "Tensor":
+        operation = MatMul()
+        result = operation.forward(self, other)
+
+        return result
+
+    def __rmatmul__(self, other) -> "Tensor":
+        operation = MatMul()
+        result = operation.forward(self, other)
+
+        return result
+
+    def __imatmul__(self, other) -> "Tensor":
+        operation = Mul()
+        result = operation.forward(self, other)
+
+        return result
 
 # Operations
 class Operation:
@@ -108,8 +137,8 @@ class Add(Operation):
     def forward(self, a, b) -> Tensor:
         """Method used during forward pass.
         
-        :parameter a: First input Tensor.
-        :parameter b: Second input Tensor.
+        :parameter a: First Tensor.
+        :parameter b: Second Tensor.
         """
         # Save operands to cache
         self._cache = (a, b)
@@ -125,7 +154,7 @@ class Add(Operation):
     
     def backward(self, dz) -> None:
         """Method used during backpropagation.
-        Chain rule: :math:`dE/dx = dE/dz * 1`
+        Computes gradients using the chain rule.
 
         :parameter dz: Output (resulting) Tensor's gradient.
         """
@@ -134,13 +163,50 @@ class Add(Operation):
         
         # Compute gradient for "a"
         if a.requires_grad:
+            # d/da(a + b) = 1
             da = dz
             a.backward(da)
 
         # Compute gradient for "b"
         if b.requires_grad:
+            # d/db(a + b) = 1
             db = dz
             b.backward(db)
+
+
+class Neg(Operation):
+    """Negation operation."""
+    def forward(self, a) -> Tensor:
+        """Method used during forward pass
+        
+        :parameter a: Tensor to be negated.
+        """
+        # Save operand to cache
+        self._cache = a
+
+        # Perform operation
+        z_data = -a.data
+        requires_grad = a.requires_grad
+
+        # Initialize resulting Tensor
+        z = Tensor(data=z_data, operation=self, requires_grad=requires_grad)
+
+        return z
+
+    def backward(self, dz) -> None:
+        """Method used during backpropagation.
+        Computes gradients using the chain rule.
+        
+        :parameter dz: Output (resulting) Tensor's gradient.
+        """
+        # Get operand from cache
+        a = self._cache
+
+        # Compute gradient for "a"
+        if a.requires_grad:
+            # d/da(-a) = -1
+            da = dz * -1
+            a.backward(da)
 
 
 class Mul(Operation):
@@ -165,18 +231,106 @@ class Mul(Operation):
 
     def backward(self, dz) -> None:
         """Method used during backpropagation.
-        
-        Chain rule: :math:`dE/dx = dE/dz * x`
+        Computes gradients using the chain rule.
+
+        :parameter dz: Output (resulting) Tensor's gradient.
         """
         # Get operands from cache
         a, b = self._cache
 
-        # Compute gradients for "a"
+        # Compute gradient for "a"
         if a.requires_grad:
-            da = dz * a.data
+            # d/da(a * b) = b
+            da = dz * b.data
             a.backward(da)
 
-        # Compute gradients for "b"
+        # Compute gradient for "b"
         if b.requires_grad:
-            db = dz * b.data
+            # d/db(a * b) = a
+            db = dz * a.data
+            b.backward(db)
+
+
+class Div(Operation):
+    """Division operation."""
+    def forward(self, a, b) -> Tensor:
+        """Method used during forward pass.
+        
+        :parameter a: First Tensor (dividend).
+        :parameter b: Second Tensor (divisor).
+        """
+        # Save operands to cache
+        self._cache = (a, b)
+
+        # Perform operation
+        z_data = a.data / b.data
+        requires_grad = a.requires_grad or b.requires_grad
+
+        # Initialize resulting Tensor
+        z = Tensor(data=z_data, operation=self, requires_grad=requires_grad)
+
+        return z
+
+    def backward(self, dz) -> None:
+        """Method used during backpropagation.
+        Computes gradients using the chain rule.
+
+        :parameter dz: Output (resulting) Tensor's gradient.
+        """
+        # Get operands from cache
+        a, b = self._cache
+
+        # Compute gradient for "a"
+        if a.requires_gradient:
+            # d/da(a / b) = b / b^2
+            # (a / b)' = (a'b - ab') / b^2
+            da = dz * (1 / b.data)
+            a.backward(da)
+
+        # Compute gradient for "b"
+        if b.requires_gradient:
+            # d/db(a / b) = -(a / b^2)
+            db = dz * -(a.data / b.data**2)
+            b.backward(db)
+
+
+class MatMul(Operation):
+    """Matrix multiplication"""
+    def forward(self, a, b) -> Tensor:
+        """Method used during forward pass.
+        
+        :parameter a: First Tensor (left).
+        :parameter b: Second Tensor (right).
+        """
+        # Save operands to cache
+        self._cache = (a, b)
+
+        # Perform operation
+        z_data = a.data @ b.data
+        requires_grad = a.requires_grad or b.requires_grad
+
+        # Initialize resulting Tensor
+        z = Tensor(data=z_data, operation=self, requires_grad=requires_grad)
+
+        return z
+
+    def backward(self, dz) -> None:
+        """Method used during backpropagation.
+        Computes gradients using the chain rule.
+        
+        :parameter dz: Output (resulting) Tensor's gradient.
+        """
+        # Get operands from cache
+        a, b = self._cache
+
+        # Compute gradient for "a"
+        if a.requires_gradient:
+            # d/da(a @ b) = bT
+            da = dz @ b.data.T
+            a.backward(da)
+
+        # Compute gradient for "b"
+        if b.requires_gradient:
+            # d/db(a @ b) = aT
+            db = a.data.T @ dz
             b.backward(db)
