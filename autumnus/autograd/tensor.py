@@ -87,6 +87,12 @@ class Tensor:
         result = operation.forward(self, other)
 
         return result
+    
+    def __pow__(self, exp) -> "Tensor":
+        operation = Exp()
+        result = operation.forward(self, exp)
+
+        return result
 
     def __matmul__(self, other) -> "Tensor":
         operation = MatMul()
@@ -103,6 +109,13 @@ class Tensor:
     def __imatmul__(self, other) -> "Tensor":
         operation = Mul()
         result = operation.forward(self, other)
+
+        return result
+    
+    # Other operations
+    def log(self, exp):
+        operation = Log()
+        result = operation.forward(self, exp)
 
         return result
 
@@ -290,6 +303,77 @@ class Div(Operation):
             # d/db(a / b) = -(a / b^2)
             db = dz * -(a.data / b.data**2)
             b.backward(db)
+
+
+class Exp(Operation):
+    """Element-wise exponention operation."""
+    def forward(self, a, exp) -> Tensor:
+        """Method used during forward pass.
+        
+        :parameter a: Tensor to be exponented.
+        :parameter exp: Power.
+        """
+        # Save operands to cache
+        self._cache = (a, exp)
+
+        # Perform operation
+        z_data = a.data ** exp
+        requires_grad = a.requires_grad
+
+        # Initialize resulting Tensor
+        z = Tensor(data=z_data, operation=self, requires_grad=requires_grad)
+
+        return z
+
+    def backward(self, dz):
+        """Method used during backpropagation.
+        Computes gradients using the chain rule.
+        
+        :parameter dz: Output (resulting) Tensor's gradient.
+        """
+        # Get operand from cache
+        a, exp = self._cache
+
+        # Compute gradient for "a"
+        if a.requires_grad:
+            # d/da(a ** exp) = (exp * a**(exp - 1))
+            da = dz * (exp * a ** (exp - 1))
+            a.backward(da)
+
+
+class Log(Operation):
+    """Element-wise logarithm operation."""
+    def forward(self, a, exp):
+        """Method used during forward pass.
+        
+        :parameter a: Tensor to be logarithmed.
+        """
+        # Save operand to cache
+        self._cache = a
+
+        # Perform operation
+        z_data = np.log(a.data)
+        requires_grad = a.requires_grad
+
+        # Initialize resulting Tensor
+        z = Tensor(data=z_data, operation=self, requires_grad=requires_grad)
+
+        return z
+
+    def backward(self, dz):
+        """Method used during backpropagation.
+        Computes gradients using the chain rule.
+        
+        :parameter dz: Output (resulting) Tensor's gradient.
+        """
+        # Get operand from cache
+        a = self._cache
+
+        # Compute gradient for "a"
+        if a.requires_grad:
+            # d/da(log(a)) = 1 / a
+            da = dz * (1 / a.data)
+            a.backward(da)
 
 
 class MatMul(Operation):
