@@ -140,35 +140,6 @@ class MatMul(Operation):
         return z
     
     def backward(self, dz: np.ndarray) -> None:
-        """
-            a11 a12 a1n
-        A = a21 a22 a2n
-            am1 am2 amn
-            
-            b11 b12 b1k
-        B = b21 b22 b2k
-            bn1 bn2 bnk
-            
-            a11b11 + ... + a1nbn1
-        Y = a21b11 + ... + a2nbn1
-            am1b11 + ... + amnbn1
-            
-                dL_dy11             dL_dy11 * dy11_da11 ... dL_dy11 * dy11_da1n    
-        dL_dY = dL_dy21     dL_dA = dL_dy21 * dy21_da21 ... dL_dy21 * dy21_da2n = 
-                dL_dym1             dL_dym1 * dym1_dam1 ... dL_dym1 * dym1_damn
-
-                                    dL_dy11 * b11 ... dL_dy11 * bn1
-                                  = dL_dy21 * b11 ... dL_dy21 * bn1 = dL_dY * B^T
-                                    dL_dym1 * b11 ... dL_dym1 * bn1
-
-                dL_dy11 * dy11_db11 + ... + dL_dym1 * dym1_db11
-        dL_dB = dL_dy11 * dy11_db21 + ... + dL_dym1 * dym1_db21 =
-                dL_dy11 * dy11_dbn1 + ... + dL_dym1 * dym1_dbn1
-
-                dL_dy11 * a11 + ... + dL_ym1 * am1
-              = dL_dy11 * a12 + ... + dL_ym1 * am2 = A^T * dL_dY
-                dL_dy11 * a1n + ... + dL_ym1 * amn
-                """
         # get operands from cache
         a, b = self._cache
 
