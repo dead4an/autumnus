@@ -13,7 +13,7 @@ class Tensor:
         else:
             self._grad = None
 
-    def backward(self):
+    def backward(self, grad: np.ndarray):
         """Method used for back propagation."""
         ...
 
@@ -37,7 +37,6 @@ class Tensor:
         op = Mul(self, other)
         z = op.forward(self, other)
         return z
-    
 
 class Operation:
     """Base operation class."""
@@ -51,7 +50,6 @@ class Operation:
     
     def __call__(self, *args, **kwargs):
         self.forward(*args, **kwargs)
-
 
 class Add(Operation):
     def forward(self, a: Tensor, b: Tensor) -> Tensor:
@@ -78,7 +76,6 @@ class Add(Operation):
             dz_db = np.ones_like(b._data)
             b.update_grad(dz_db)
 
-
 class Sub(Operation):
     def forward(self, a: Tensor, b: Tensor) -> Tensor:
         # cache operands
@@ -102,8 +99,7 @@ class Sub(Operation):
 
         if b._requires_grad:
             dz_db = -np.ones_like(b._data)
-            b.update_grad(dz_db)
-    
+            b.update_grad(dz_db) 
 
 class Mul(Operation):
     def forward(self, a: Tensor, b: Tensor) -> Tensor:
@@ -126,6 +122,30 @@ class Mul(Operation):
             dz_da = np.full_like(a._data, b)
             a.update_grad(dz_da)
 
+class Div(Operation):
+    def forward(self, a: Tensor, b: Tensor) -> Tensor:
+        # cache operands
+        self._cache = (a, b)
+
+        # compute resulting tensor
+        z_data = a._data / b._data
+        requires_grad = a._requires_grad or b._requires_grad
+        z = Tensor(data=z_data, operation=self, requires_grad=requires_grad)
+
+        return z
+    
+    def backward(self, dz: np.ndarray) -> None:
+        # get operands from cache
+        a, b = self._cache
+
+        # compute gradients
+        if a._requires_grad:
+            dz_da = 1 / b._data
+            a.update_grad(dz_da)
+
+        if b._requires_grad:
+            dz_db = a * -(1 / b**2)
+            b.update_grad(dz_db)
 
 class MatMul(Operation):
     def forward(self, a: Tensor, b: Tensor) -> Tensor:
