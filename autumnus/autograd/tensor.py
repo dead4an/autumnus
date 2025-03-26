@@ -13,9 +13,14 @@ class Tensor:
         else:
             self._grad = None
 
-    def backward(self, grad: np.ndarray):
+    def backward(self, lr: float):
         """Method used for back propagation."""
-        ...
+        # update weights
+        self._data -= self._grad * lr
+
+        # pass grad backward
+        if self._operation:
+            self._operation.backward(self._grad)
 
     def update_grad(self, grad):
         self._grad += grad
@@ -69,11 +74,11 @@ class Add(Operation):
 
         # compute gradients
         if a._requires_grad:
-            dz_da = np.ones_like(a._data)
+            dz_da = dz
             a.update_grad(dz_da)
 
         if b._requires_grad:
-            dz_db = np.ones_like(b._data)
+            dz_db = dz
             b.update_grad(dz_db)
 
 class Sub(Operation):
@@ -94,11 +99,11 @@ class Sub(Operation):
 
         # compute gradients
         if a._requires_grad:
-            dz_da = np.ones_like(a._data)
+            dz_da = dz
             a.update_grad(dz_da)
 
         if b._requires_grad:
-            dz_db = -np.ones_like(b._data)
+            dz_db = -dz
             b.update_grad(dz_db) 
 
 class Mul(Operation):
@@ -119,8 +124,12 @@ class Mul(Operation):
 
         # compute gradients
         if a._requires_grad:
-            dz_da = np.full_like(a._data, b)
+            dz_da = dz * b
             a.update_grad(dz_da)
+
+        if b._requires_grad:
+            dz_db = dz * a.sum()
+            b.update_grad(dz_db)
 
 class Div(Operation):
     def forward(self, a: Tensor, b: Tensor) -> Tensor:
@@ -140,11 +149,11 @@ class Div(Operation):
 
         # compute gradients
         if a._requires_grad:
-            dz_da = 1 / b._data
+            dz_da = dz *  (1 / b._data)
             a.update_grad(dz_da)
 
         if b._requires_grad:
-            dz_db = a * -(1 / b**2)
+            dz_db = -dz * a * (1 / b**2)
             b.update_grad(dz_db)
 
 class MatMul(Operation):
