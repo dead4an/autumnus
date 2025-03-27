@@ -1,1 +1,6 @@
+-e git+https://github.com/dead4an/autumnus.git@4c1b0330efd39bf92b5697aa1acc7f8d4be00dd3#egg=autumnus
+iniconfig==2.1.0
 numpy==2.2.4
+packaging==24.2
+pluggy==1.5.0
+pytest==8.3.5

@@ -33,13 +33,18 @@ class Tensor:
         z = op.forward(self, other)
         return z
     
-    def __sub__(self, other) -> "Tensor":
-        op = Sub(self, other)
+    def __sub__(self, other: "Tensor") -> "Tensor":
+        op = Sub()
         z = op.forward(self, other)
         return z
     
-    def __mul__(self, other) -> "Tensor":
-        op = Mul(self, other)
+    def __mul__(self, other: "Tensor") -> "Tensor":
+        op = Mul()
+        z = op.forward(self, other)
+        return z
+    
+    def __truediv__(self, other: "Tensor") -> "Tensor":
+        op = Div()
         z = op.forward(self, other)
         return z
 
