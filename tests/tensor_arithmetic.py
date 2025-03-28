@@ -1,5 +1,4 @@
 import pytest
-import warnings
 import numpy as np
 from autumnus.autograd import Tensor
 
