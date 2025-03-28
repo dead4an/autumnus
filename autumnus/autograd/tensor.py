@@ -3,7 +3,8 @@ import numpy as np
 
 class Tensor:
     """Tensor class with autograd support."""
-    def __init__(self, data: np.ndarray, operation: "Operation"=None, requires_grad=True):
+    def __init__(self, data: np.ndarray, operation: "Operation"=None, 
+                 requires_grad=True) -> None:
         self._data = np.copy(data)
         self._operation = operation
         self._requires_grad = requires_grad
@@ -13,8 +14,8 @@ class Tensor:
         else:
             self._grad = None
 
-    def backward(self, lr: float):
-        """Method used for back propagation."""
+    def backward(self, lr: float) -> None:
+        """Updates weights based on learning rate and output gradient."""
         # update weights
         self._data -= self._grad * lr
 
@@ -22,10 +23,12 @@ class Tensor:
         if self._operation:
             self._operation.backward(self._grad)
 
-    def update_grad(self, grad):
+    def update_grad(self, grad) -> None:
+        """Accumulates output gradient."""
         self._grad += grad
 
-    def zero_grad(self):
+    def zero_grad(self) -> None:
+        """Resets output gradient to zero."""
         self._grad = np.zeros_like(self._data)
 
     def __add__(self, other: "Tensor") -> "Tensor":
@@ -67,6 +70,7 @@ class Operation:
         self.forward(*args, **kwargs)
 
 class Add(Operation):
+    """Addition operation class."""
     def forward(self, a: Tensor, b: Tensor) -> Tensor:
         # cache operands
         self._cache = (a, b)
@@ -92,6 +96,7 @@ class Add(Operation):
             b.update_grad(dz_db)
 
 class Sub(Operation):
+    """Subtraction operation class."""
     def forward(self, a: Tensor, b: Tensor) -> Tensor:
         # cache operands
         self._cache = (a, b)
@@ -117,6 +122,7 @@ class Sub(Operation):
             b.update_grad(dz_db) 
 
 class Mul(Operation):
+    """Multiplication operation class."""
     def forward(self, a: Tensor, b: Tensor) -> Tensor:
         # cache operands
         self._cache = (a, b)
@@ -142,6 +148,7 @@ class Mul(Operation):
             b.update_grad(dz_db)
 
 class Div(Operation):
+    """Division operation class."""
     def forward(self, a: Tensor, b: Tensor) -> Tensor:
         # cache operands
         self._cache = (a, b)
@@ -167,6 +174,7 @@ class Div(Operation):
             b.update_grad(dz_db)
 
 class MatMul(Operation):
+    """Matrix multiplication operation class."""
     def forward(self, a: Tensor, b: Tensor) -> Tensor:
         # cache operands
         self._cache = (a, b)
