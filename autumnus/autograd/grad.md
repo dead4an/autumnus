@@ -21,7 +21,7 @@ w_{n1} & w_{n2} & \cdots & w_{nk}
 \end{bmatrix}
 \quad
 
-\mathbf{Y} = \mathbf{W} \mathbf{X} =
+\mathbf{Y} = \mathbf{X} \mathbf{W} =
 \begin{bmatrix}
 y_{11} & y_{12} & \cdots & y_{1k} \\
 y_{21} & y_{22} & \cdots & y_{2k} \\
