@@ -45,3 +45,11 @@ def test_zero_div():
     with pytest.warns(RuntimeWarning, match="divide by zero"):
         c = a / b
         assert c._data == np.array([np.inf])
+
+def test_matmul():
+    a = np.array([[0, 1, 2], [-1, -2, 0], [0.1, 0.5, -0.1]])
+    b = np.array([[0, 1, 0], [-2, 4, 0], [-10, 0.2, -0.5]])
+    a = Tensor(a)
+    b = Tensor(b)
+    c = a @ b
+    assert np.array_equal(c._data, a._data @ b._data)

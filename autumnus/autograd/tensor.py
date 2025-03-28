@@ -47,6 +47,11 @@ class Tensor:
         op = Div()
         z = op.forward(self, other)
         return z
+    
+    def __matmul__(self, other: "Tensor") -> "Tensor":
+        op = MatMul()
+        z = op.forward(self, other)
+        return z
 
 class Operation:
     """Base operation class."""
