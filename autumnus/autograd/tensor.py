@@ -2,7 +2,7 @@ import numpy as np
 
 
 class Tensor:
-    """Tensor class with autograd support."""
+    """Tensor with autograd support."""
     def __init__(self, data: np.ndarray, operation: "Operation"=None, 
                  requires_grad=True) -> None:
         self._data = np.copy(data)
@@ -59,7 +59,7 @@ class Tensor:
 class Operation:
     """Base operation class."""
     def forward(self) -> Tensor:
-        """Method used for forward propagation."""
+        """Method used in forward pass."""
         raise NotImplementedError
 
     def backward(self) -> None:
@@ -70,7 +70,7 @@ class Operation:
         self.forward(*args, **kwargs)
 
 class Add(Operation):
-    """Addition operation class."""
+    """Addition operation."""
     def forward(self, a: Tensor, b: Tensor) -> Tensor:
         # cache operands
         self._cache = (a, b)
@@ -96,7 +96,7 @@ class Add(Operation):
             b.update_grad(dz_db)
 
 class Sub(Operation):
-    """Subtraction operation class."""
+    """Subtraction operation."""
     def forward(self, a: Tensor, b: Tensor) -> Tensor:
         # cache operands
         self._cache = (a, b)
@@ -122,7 +122,7 @@ class Sub(Operation):
             b.update_grad(dz_db) 
 
 class Mul(Operation):
-    """Multiplication operation class."""
+    """Multiplication operation."""
     def forward(self, a: Tensor, b: Tensor) -> Tensor:
         # cache operands
         self._cache = (a, b)
@@ -148,7 +148,7 @@ class Mul(Operation):
             b.update_grad(dz_db)
 
 class Div(Operation):
-    """Division operation class."""
+    """Division operation."""
     def forward(self, a: Tensor, b: Tensor) -> Tensor:
         # cache operands
         self._cache = (a, b)
@@ -174,7 +174,7 @@ class Div(Operation):
             b.update_grad(dz_db)
 
 class MatMul(Operation):
-    """Matrix multiplication operation class."""
+    """Matrix multiplication operation."""
     def forward(self, a: Tensor, b: Tensor) -> Tensor:
         # cache operands
         self._cache = (a, b)
