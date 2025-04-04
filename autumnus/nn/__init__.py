@@ -1,3 +1,3 @@
-from .layers import (
+from .layer import (
     Linear
 )
